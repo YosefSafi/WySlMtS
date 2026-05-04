@@ -9,6 +9,7 @@ from wyslmts.storage import Storage
 from wyslmts.ai_service import AIService
 from wyslmts.notifications import send_notification
 from wyslmts.utils import error_exit, success_print, info_print
+from wyslmts.config import Config
 
 app = typer.Typer(
     name="wyslmts",
@@ -18,13 +19,16 @@ app = typer.Typer(
 task_app = typer.Typer(help="Manage your tasks")
 research_app = typer.Typer(help="AI Research Agent")
 summary_app = typer.Typer(help="Daily summaries")
+config_app = typer.Typer(help="Manage settings")
 
 app.add_typer(task_app, name="task")
 app.add_typer(research_app, name="research")
 app.add_typer(summary_app, name="summary")
+app.add_typer(config_app, name="config")
 
 console = Console()
 storage = Storage()
+config = Config()
 
 def get_ai_service():
     try:
@@ -55,6 +59,7 @@ def interactive_mode():
                 "Complete Task",
                 "Research Topic",
                 "Generate Daily Summary",
+                "Settings",
                 "Exit"
             ]
         ).ask()
@@ -88,6 +93,56 @@ def interactive_mode():
                 research_topic(topic=topic)
         elif action == "Generate Daily Summary":
             generate_summary()
+        elif action == "Settings":
+            key = questionary.select(
+                "Which setting to update?",
+                choices=["openai_api_key", "tavily_api_key", "openai_model", "Back"]
+            ).ask()
+            if key != "Back":
+                value = questionary.text(f"Enter value for {key}:").ask()
+                if value:
+                    config_set(key, value)
+
+@config_app.command("set")
+def config_set(key: str, value: str):
+    """
+    Set a configuration value.
+    """
+    config.set(key, value)
+    success_print(f"Setting {key} updated.")
+
+@config_app.command("get")
+def config_get(key: str):
+    """
+    Get a configuration value.
+    """
+    value = config.get(key)
+    if value:
+        console.print(f"{key}: {value}")
+    else:
+        info_print(f"Setting {key} not found.")
+
+@config_app.command("list")
+def config_list():
+    """
+    List all configuration values.
+    """
+    if not config.settings:
+        info_print("No settings configured.")
+        return
+    
+    table = Table(title="Settings")
+    table.add_column("Key", style="cyan")
+    table.add_column("Value", style="magenta")
+    
+    for k, v in config.settings.items():
+        # Mask API keys
+        display_v = v
+        if "key" in k:
+            display_v = "*" * (len(v) - 4) + v[-4:] if len(v) > 4 else "****"
+        table.add_row(k, display_v)
+    
+    console.print(table)
 
 @task_app.command("add")
 def add_task(

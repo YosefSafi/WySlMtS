@@ -3,16 +3,19 @@ from typing import List, Optional
 from openai import OpenAI
 from tavily import TavilyClient
 from dotenv import load_dotenv
+from wyslmts.config import Config
 
 load_dotenv()
 
 class AIService:
     def __init__(self, openai_api_key: Optional[str] = None, tavily_api_key: Optional[str] = None):
-        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        self.tavily_api_key = tavily_api_key or os.getenv("TAVILY_API_KEY")
+        config = Config()
+        self.openai_api_key = openai_api_key or config.get("openai_api_key") or os.getenv("OPENAI_API_KEY")
+        self.tavily_api_key = tavily_api_key or config.get("tavily_api_key") or os.getenv("TAVILY_API_KEY")
+        self.model = config.get("openai_model", "gpt-4-turbo-preview")
         
         if not self.openai_api_key:
-            raise ValueError("OpenAI API key not found. Please set OPENAI_API_KEY in .env file.")
+            raise ValueError("OpenAI API key not found. Please set 'openai_api_key' using 'wyslmts config set' or in .env file.")
         
         self.openai_client = OpenAI(api_key=self.openai_api_key)
         
@@ -64,7 +67,7 @@ class AIService:
         """
         
         response = self.openai_client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model=self.model,
             messages=[
                 {"role": "system", "content": "You are a professional research assistant with web search capabilities."},
                 {"role": "user", "content": prompt}
@@ -86,7 +89,7 @@ class AIService:
         """
         
         response = self.openai_client.chat.completions.create(
-            model="gpt-4-turbo-preview",
+            model=self.model,
             messages=[
                 {"role": "system", "content": "You are a productivity coach."},
                 {"role": "user", "content": prompt}
