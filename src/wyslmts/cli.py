@@ -185,23 +185,23 @@ def list_tasks():
     console.print(table)
 
 @task_app.command("done")
-def complete_task(task_id: str):
+def complete_task(task_id: str = typer.Argument(..., help="The ID or prefix of the task")):
     """
-    Mark a task as done by its ID (first 8 chars).
+    Mark a task as done by its ID (or a unique prefix).
     """
     tasks = storage.load_tasks()
-    found = False
-    for task in tasks:
-        if str(task.id).startswith(task_id):
-            task.mark_done()
-            found = True
-            break
+    matches = [t for t in tasks if str(t.id).startswith(task_id)]
     
-    if found:
-        storage.save_tasks(tasks)
-        success_print("Task marked as done!")
-    else:
-        error_exit(f"Task with ID starting with {task_id} not found.", code=0)
+    if not matches:
+        error_exit(f"No task found starting with '{task_id}'.")
+    
+    if len(matches) > 1:
+        error_exit(f"Multiple tasks found starting with '{task_id}'. Please be more specific.")
+    
+    task = matches[0]
+    task.mark_done()
+    storage.save_tasks(tasks)
+    success_print(f"Task '{task.title}' marked as done!")
 
 @research_app.command("topic")
 def research_topic(topic: str = typer.Argument(..., help="The topic to research")):
