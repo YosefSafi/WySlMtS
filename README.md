@@ -47,9 +47,28 @@ wyslmts summary generate
 
 ## 🏗️ Architecture
 
-(Architecture diagram to be added)
+The project follows a modular design inspired by Clean Architecture:
 
-The project follows a modular design, separating the core logic (domain) from the CLI interface and external service adapters.
+- **Models**: Defines the data structures (Tasks, Priority) using Pydantic.
+- **Storage**: Handles local JSON persistence.
+- **AI Service**: Encapsulates OpenAI API logic for research and summaries.
+- **CLI**: The interface layer using Typer and Rich for a polished user experience.
+
+```
+src/wyslmts/
+├── cli.py          # CLI commands and entry point
+├── models.py       # Pydantic data models
+├── storage.py      # Local JSON storage logic
+└── ai_service.py   # OpenAI integration
+```
+
+## 🧪 Testing
+
+Run tests using pytest:
+
+```bash
+pytest
+```
 
 ## 🤝 Contributing
 
