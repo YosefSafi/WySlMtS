@@ -1,4 +1,5 @@
 import typer
+import questionary
 from rich.console import Console
 from rich.table import Table
 from typing import Optional
@@ -36,6 +37,59 @@ def hello():
     Say hello to the user.
     """
     console.print("[bold green]Hello![/bold green] Welcome to WySlMtS - your AI Productivity assistant.")
+
+@app.command("interactive")
+def interactive_mode():
+    """
+    Start the interactive shell mode.
+    """
+    console.print("[bold blue]Entering Interactive Mode... (type 'exit' to quit)[/bold blue]")
+    
+    while True:
+        action = questionary.select(
+            "What would you like to do?",
+            choices=[
+                "List Tasks",
+                "Add Task",
+                "Complete Task",
+                "Research Topic",
+                "Generate Daily Summary",
+                "Exit"
+            ]
+        ).ask()
+
+        if action == "Exit" or action is None:
+            break
+        elif action == "List Tasks":
+            list_tasks()
+        elif action == "Add Task":
+            title = questionary.text("Task Title:").ask()
+            if title:
+                priority = questionary.select(
+                    "Priority:",
+                    choices=["low", "medium", "high"],
+                    default="medium"
+                ).ask()
+                add_task(title=title, priority=Priority(priority))
+        elif action == "Complete Task":
+            tasks = storage.load_tasks()
+            if not tasks:
+                console.print("[yellow]No tasks to complete.[/yellow]")
+                continue
+            task_choices = [f"{str(t.id)[:8]} - {t.title}" for t in tasks if t.status != "done"]
+            if not task_choices:
+                console.print("[yellow]All tasks are already completed![/yellow]")
+                continue
+            selected = questionary.select("Select task to complete:", choices=task_choices).ask()
+            if selected:
+                task_id = selected.split(" - ")[0]
+                complete_task(task_id=task_id)
+        elif action == "Research Topic":
+            topic = questionary.text("Topic to research:").ask()
+            if topic:
+                research_topic(topic=topic)
+        elif action == "Generate Daily Summary":
+            generate_summary()
 
 @task_app.command("add")
 def add_task(
