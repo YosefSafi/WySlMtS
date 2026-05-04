@@ -5,6 +5,7 @@ from typing import Optional
 from wyslmts.models import Task, Priority
 from wyslmts.storage import Storage
 from wyslmts.ai_service import AIService
+from wyslmts.notifications import send_notification
 
 app = typer.Typer(
     name="wyslmts",
@@ -48,6 +49,7 @@ def add_task(
     task = Task(title=title, description=description, priority=priority)
     storage.add_task(task)
     console.print(f"[bold green]Task added:[/bold green] {task.title} (ID: {str(task.id)[:8]})")
+    send_notification("New Task", f"Added: {task.title}")
 
 @task_app.command("list")
 def list_tasks():
@@ -105,6 +107,7 @@ def research_topic(topic: str = typer.Argument(..., help="The topic to research"
     
     console.print(f"\n[bold cyan]Research Results for: {topic}[/bold cyan]\n")
     console.print(result)
+    send_notification("Research Complete", f"Finished researching: {topic}")
     
     # Optionally add as a task
     if typer.confirm("\nWould you like to add a task based on this research?"):
