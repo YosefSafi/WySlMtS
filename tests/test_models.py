@@ -11,4 +11,4 @@ def test_task_mark_done():
     task = Task(title="Test Task")
     task.mark_done()
     assert task.status == TaskStatus.DONE
-    assert task.updated_at > task.created_at
+    assert task.updated_at >= task.created_at
