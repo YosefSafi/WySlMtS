@@ -2,24 +2,29 @@
 
 ![License](https://img.shields.io/github/license/YosefSafi/WySlMtS)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
-![Build Status](https://img.shields.io/github/actions/workflow/status/YosefSafi/WySlMtS/ci.yml?branch=main)
+![Build Status](https://github.com/YosefSafi/WySlMtS/actions/workflows/ci.yml/badge.svg)
 
-A professional, AI-powered command-line interface designed to supercharge your daily productivity. Features include intelligent task management, an automated research agent, and insightful daily summaries.
+WySlMtS (Work Your Smart Life, Manage the Stuff) is a professional, AI-powered command-line interface designed to supercharge your daily productivity.
 
 ## 🚀 Features
 
-- **Task Management**: Intelligent task tracking with priority and context awareness.
-- **Research Agent**: Deep-dive into topics using AI-driven web search and synthesis.
-- **Daily Summaries**: Automatically generated reports of your achievements and upcoming focus areas.
-- **Clean Architecture**: Built with modularity and extensibility in mind.
+- **Intelligent Task Management**: Track tasks with priority, status, and local persistence.
+- **AI Research Agent**: Real-time web search (via Tavily) and synthesis using GPT-4.
+- **Daily Productivity Summaries**: AI-generated reports of your achievements and focus areas.
+- **Interactive Shell Mode**: A polished interactive environment for seamless workflow.
+- **Desktop Notifications**: Stay informed with system alerts for task and research events.
+- **Configuration Management**: Manage API keys and AI models directly through the CLI.
+- **CI/CD Ready**: Automated testing with GitHub Actions.
 
 ## 🛠️ Tech Stack
 
 - **Language**: Python 3.10+
-- **CLI Framework**: Typer / Click
-- **AI Integration**: OpenAI / Anthropic API
-- **Testing**: Pytest
-- **Linting/Formatting**: Ruff
+- **CLI Framework**: [Typer](https://typer.tiangolo.com/) & [Rich](https://rich.readthedocs.io/)
+- **Interactive Mode**: [Questionary](https://questionary.readthedocs.io/)
+- **AI Integration**: [OpenAI GPT-4](https://openai.com/) & [Tavily Search](https://tavily.com/)
+- **Persistence**: JSON-based local storage
+- **Notifications**: [Plyer](https://plyer.readthedocs.io/)
+- **Testing**: [Pytest](https://docs.pytest.org/)
 
 ## 📦 Installation
 
@@ -28,52 +33,59 @@ A professional, AI-powered command-line interface designed to supercharge your d
 git clone https://github.com/YosefSafi/WySlMtS.git
 cd WySlMtS
 
-# Install dependencies (using poetry or pip)
+# Install the package in editable mode
 pip install -e .
+```
+
+## ⚙️ Configuration
+
+Set up your API keys using the built-in config command:
+
+```bash
+wyslmts config set openai_api_key "your-key-here"
+wyslmts config set tavily_api_key "your-key-here"
 ```
 
 ## 📖 Usage
 
+### Interactive Mode (Recommended)
 ```bash
-# Add a task
+wyslmts interactive
+```
+
+### Standard Commands
+```bash
+# Tasks
 wyslmts task add "Research clean architecture" --priority high
+wyslmts task list
+wyslmts task done <id-prefix>
 
-# Start a research session
-wyslmts research "Best practices for CLI design"
+# Research
+wyslmts research topic "Future of AI Agents"
 
-# Generate daily summary
+# Summary
 wyslmts summary generate
-```
-
-## 🏗️ Architecture
-
-The project follows a modular design inspired by Clean Architecture:
-
-- **Models**: Defines the data structures (Tasks, Priority) using Pydantic.
-- **Storage**: Handles local JSON persistence.
-- **AI Service**: Encapsulates OpenAI API logic for research and summaries.
-- **CLI**: The interface layer using Typer and Rich for a polished user experience.
-
-```
-src/wyslmts/
-├── cli.py          # CLI commands and entry point
-├── models.py       # Pydantic data models
-├── storage.py      # Local JSON storage logic
-└── ai_service.py   # OpenAI integration
 ```
 
 ## 🧪 Testing
 
-Run tests using pytest:
-
+Run the test suite:
 ```bash
 pytest
 ```
 
-## 🤝 Contributing
+## 🏗️ Architecture
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+The project follows a modular, clean design:
+
+- `wyslmts.cli`: Entry point and command definitions.
+- `wyslmts.models`: Pydantic data structures.
+- `wyslmts.storage`: Local JSON persistence logic.
+- `wyslmts.ai_service`: OpenAI and Tavily integration.
+- `wyslmts.config`: User settings and preference management.
+- `wyslmts.notifications`: Desktop alert system.
+- `wyslmts.utils`: Shared helper functions.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
