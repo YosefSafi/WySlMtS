@@ -3,10 +3,12 @@ import questionary
 from rich.console import Console
 from rich.table import Table
 from typing import Optional
+
 from wyslmts.models import Task, Priority
 from wyslmts.storage import Storage
 from wyslmts.ai_service import AIService
 from wyslmts.notifications import send_notification
+from wyslmts.utils import error_exit, success_print, info_print
 
 app = typer.Typer(
     name="wyslmts",
@@ -28,8 +30,7 @@ def get_ai_service():
     try:
         return AIService()
     except ValueError as e:
-        console.print(f"[bold red]Error:[/bold red] {e}")
-        raise typer.Exit(code=1)
+        error_exit(str(e))
 
 @app.command()
 def hello():
@@ -43,7 +44,7 @@ def interactive_mode():
     """
     Start the interactive shell mode.
     """
-    console.print("[bold blue]Entering Interactive Mode... (type 'exit' to quit)[/bold blue]")
+    info_print("Entering Interactive Mode... (type 'exit' to quit)")
     
     while True:
         action = questionary.select(
@@ -72,14 +73,11 @@ def interactive_mode():
                 ).ask()
                 add_task(title=title, priority=Priority(priority))
         elif action == "Complete Task":
-            tasks = storage.load_tasks()
+            tasks = [t for t in storage.load_tasks() if t.status != "done"]
             if not tasks:
                 console.print("[yellow]No tasks to complete.[/yellow]")
                 continue
-            task_choices = [f"{str(t.id)[:8]} - {t.title}" for t in tasks if t.status != "done"]
-            if not task_choices:
-                console.print("[yellow]All tasks are already completed![/yellow]")
-                continue
+            task_choices = [f"{str(t.id)[:8]} - {t.title}" for t in tasks]
             selected = questionary.select("Select task to complete:", choices=task_choices).ask()
             if selected:
                 task_id = selected.split(" - ")[0]
@@ -102,7 +100,7 @@ def add_task(
     """
     task = Task(title=title, description=description, priority=priority)
     storage.add_task(task)
-    console.print(f"[bold green]Task added:[/bold green] {task.title} (ID: {str(task.id)[:8]})")
+    success_print(f"Task added: {task.title} (ID: {str(task.id)[:8]})")
     send_notification("New Task", f"Added: {task.title}")
 
 @task_app.command("list")
@@ -146,9 +144,9 @@ def complete_task(task_id: str):
     
     if found:
         storage.save_tasks(tasks)
-        console.print(f"[bold green]Task marked as done![/bold green]")
+        success_print("Task marked as done!")
     else:
-        console.print(f"[bold red]Task with ID starting with {task_id} not found.[/bold red]")
+        error_exit(f"Task with ID starting with {task_id} not found.", code=0)
 
 @research_app.command("topic")
 def research_topic(topic: str = typer.Argument(..., help="The topic to research")):
@@ -163,12 +161,11 @@ def research_topic(topic: str = typer.Argument(..., help="The topic to research"
     console.print(result)
     send_notification("Research Complete", f"Finished researching: {topic}")
     
-    # Optionally add as a task
     if typer.confirm("\nWould you like to add a task based on this research?"):
         task_title = f"Review research: {topic}"
         task = Task(title=task_title, description=f"AI Research generated for: {topic}")
         storage.add_task(task)
-        console.print(f"[bold green]Task added:[/bold green] {task_title}")
+        success_print(f"Task added: {task_title}")
 
 @summary_app.command("generate")
 def generate_summary():
