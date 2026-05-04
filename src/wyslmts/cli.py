@@ -4,6 +4,7 @@ from rich.table import Table
 from typing import Optional
 from wyslmts.models import Task, Priority
 from wyslmts.storage import Storage
+from wyslmts.ai_service import AIService
 
 app = typer.Typer(
     name="wyslmts",
@@ -11,10 +12,22 @@ app = typer.Typer(
     add_completion=False,
 )
 task_app = typer.Typer(help="Manage your tasks")
+research_app = typer.Typer(help="AI Research Agent")
+summary_app = typer.Typer(help="Daily summaries")
+
 app.add_typer(task_app, name="task")
+app.add_typer(research_app, name="research")
+app.add_typer(summary_app, name="summary")
 
 console = Console()
 storage = Storage()
+
+def get_ai_service():
+    try:
+        return AIService()
+    except ValueError as e:
+        console.print(f"[bold red]Error:[/bold red] {e}")
+        raise typer.Exit(code=1)
 
 @app.command()
 def hello():
@@ -80,6 +93,44 @@ def complete_task(task_id: str):
         console.print(f"[bold green]Task marked as done![/bold green]")
     else:
         console.print(f"[bold red]Task with ID starting with {task_id} not found.[/bold red]")
+
+@research_app.command("topic")
+def research_topic(topic: str = typer.Argument(..., help="The topic to research")):
+    """
+    Research a topic using AI.
+    """
+    ai = get_ai_service()
+    with console.status(f"[bold blue]Researching {topic}..."):
+        result = ai.research_topic(topic)
+    
+    console.print(f"\n[bold cyan]Research Results for: {topic}[/bold cyan]\n")
+    console.print(result)
+    
+    # Optionally add as a task
+    if typer.confirm("\nWould you like to add a task based on this research?"):
+        task_title = f"Review research: {topic}"
+        task = Task(title=task_title, description=f"AI Research generated for: {topic}")
+        storage.add_task(task)
+        console.print(f"[bold green]Task added:[/bold green] {task_title}")
+
+@summary_app.command("generate")
+def generate_summary():
+    """
+    Generate a daily productivity summary.
+    """
+    tasks = storage.load_tasks()
+    if not tasks:
+        console.print("[yellow]No tasks to summarize.[/yellow]")
+        return
+
+    ai = get_ai_service()
+    tasks_str = "\n".join([f"- {t.title} ({t.status.value})" for t in tasks])
+    
+    with console.status("[bold blue]Generating daily summary..."):
+        summary = ai.summarize_day(tasks_str)
+    
+    console.print("\n[bold magenta]Daily Productivity Summary[/bold magenta]\n")
+    console.print(summary)
 
 if __name__ == "__main__":
     app()
