@@ -18,8 +18,15 @@ class Config:
         return {}
 
     def _save_config(self):
-        with open(self.config_path, "w") as f:
-            json.dump(self.settings, f, indent=4)
+        temp_path = self.config_path.with_suffix(".tmp")
+        try:
+            with open(temp_path, "w") as f:
+                json.dump(self.settings, f, indent=4)
+            temp_path.replace(self.config_path)
+        except Exception as e:
+            if temp_path.exists():
+                temp_path.unlink()
+            raise e
 
     def get(self, key: str, default: Any = None) -> Any:
         return self.settings.get(key, default)

@@ -118,9 +118,25 @@ def config_get(key: str):
     """
     value = config.get(key)
     if value:
-        console.print(f"{key}: {value}")
+        # Mask sensitive keys
+        if "key" in key.lower():
+            display_v = "*" * (len(value) - 4) + value[-4:] if len(value) > 4 else "****"
+            console.print(f"{key}: {display_v} [dim](value masked for security)[/dim]")
+        else:
+            console.print(f"{key}: {value}")
     else:
         info_print(f"Setting {key} not found.")
+
+@config_app.command("show-full")
+def config_show_full(key: str):
+    """
+    Get a configuration value without masking (CAUTION).
+    """
+    value = config.get(key)
+    if value:
+        console.print(f"{key}: {value}")
+    else:
+        error_exit(f"Setting {key} not found.")
 
 @config_app.command("list")
 def config_list():

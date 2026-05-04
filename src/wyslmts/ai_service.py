@@ -45,7 +45,10 @@ class AIService:
         """
         search_context = ""
         if self.tavily_client:
-            search_context = self._web_search(topic)
+            try:
+                search_context = self._web_search(topic)
+            except Exception as e:
+                search_context = f"Warning: Web search failed ({e}). Proceeding with internal knowledge only."
         
         prompt = f"""
         You are a highly efficient research assistant. 
@@ -66,16 +69,18 @@ class AIService:
         Format the output clearly for a CLI interface using Markdown.
         """
         
-        response = self.openai_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": "You are a professional research assistant with web search capabilities."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-        )
-        
-        return response.choices[0].message.content or "No summary generated."
+        try:
+            response = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a professional research assistant with web search capabilities."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+            )
+            return response.choices[0].message.content or "No summary generated."
+        except Exception as e:
+            return f"Error: AI research generation failed. Details: {str(e)}"
 
     def summarize_day(self, tasks_summary: str) -> str:
         """
@@ -88,13 +93,15 @@ class AIService:
         Highlight achievements and suggest focus areas for tomorrow.
         """
         
-        response = self.openai_client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": "You are a productivity coach."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.7,
-        )
-        
-        return response.choices[0].message.content or "No summary generated."
+        try:
+            response = self.openai_client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a productivity coach."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+            )
+            return response.choices[0].message.content or "No summary generated."
+        except Exception as e:
+            return f"Error: Daily summary generation failed. Details: {str(e)}"

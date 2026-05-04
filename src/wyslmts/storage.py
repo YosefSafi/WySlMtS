@@ -19,8 +19,15 @@ class Storage:
             return []
 
     def save_tasks(self, tasks: List[Task]):
-        with open(self.data_path, "w") as f:
-            json.dump([task.model_dump(mode='json') for task in tasks], f, indent=4)
+        temp_path = self.data_path.with_suffix(".tmp")
+        try:
+            with open(temp_path, "w") as f:
+                json.dump([task.model_dump(mode='json') for task in tasks], f, indent=4)
+            temp_path.replace(self.data_path)
+        except Exception as e:
+            if temp_path.exists():
+                temp_path.unlink()
+            raise e
 
     def add_task(self, task: Task):
         tasks = self.load_tasks()
